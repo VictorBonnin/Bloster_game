@@ -1,0 +1,58 @@
+import pygame
+import sys
+
+# Initialisation de Pygame
+pygame.init()
+
+# Charger l'image du personnage
+personnage_image = pygame.image.load("D:\Projet\A\personnage.png")
+# La taille initiale du personnage (à ajuster selon vos besoins)
+taille_personnage = (100, 100)
+personnage_image = pygame.transform.scale(personnage_image, taille_personnage)
+
+personnage_rect = personnage_image.get_rect()
+
+# Définir la vitesse du personnage
+vitesse = 3
+
+# Obtenir les informations sur l'écran
+info_ecran = pygame.display.Info()
+largeur_ecran, hauteur_ecran = info_ecran.current_w, info_ecran.current_h
+
+# Définir la nouvelle taille de la fenêtre
+largeur, hauteur = largeur_ecran, hauteur_ecran  # Modifiez la hauteur selon vos besoins
+taille_fenetre = (largeur, hauteur)
+
+# Créer la fenêtre
+fenetre = pygame.display.set_mode(taille_fenetre)
+pygame.display.set_caption("Caca Boudin")
+
+# Boucle principale du jeu
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+    # Recalculer la taille du personnage en fonction de la fenêtre
+    nouvelle_taille_personnage = (largeur_ecran // 20, hauteur_ecran // 12)  # À ajuster selon vos besoins
+    personnage_image = pygame.transform.scale(personnage_image, nouvelle_taille_personnage)
+    personnage_rect.size = nouvelle_taille_personnage
+
+    # Gestion des touches pour déplacer le personnage
+    touches = pygame.key.get_pressed()
+    if touches[pygame.K_LEFT] and personnage_rect.left > 0:
+        personnage_rect.x -= vitesse
+    if touches[pygame.K_RIGHT] and personnage_rect.right < largeur:
+        personnage_rect.x += vitesse
+    if touches[pygame.K_UP] and personnage_rect.top > 0:
+        personnage_rect.y -= vitesse
+    if touches[pygame.K_DOWN] and personnage_rect.bottom < hauteur:
+        personnage_rect.y += vitesse
+
+    # Mise à jour de l'affichage
+    fenetre.fill((0, 0, 0))  # Remplit l'écran avec une couleur de fond (ici, noir)
+    fenetre.blit(personnage_image, personnage_rect)
+    pygame.display.flip()
+
+# Fin du programme

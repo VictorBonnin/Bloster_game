@@ -1,0 +1,431 @@
+import pygame
+import sys
+import random
+
+# Initialisation de Pygame
+pygame.init()
+
+# Initialisation du module mixer
+pygame.mixer.init()
+
+# Charger la musique d'ambiance
+pygame.mixer.music.load("D:\\Projet\\A\\Audio\\mongol.mp3")
+
+# Jouer la musique en boucle
+pygame.mixer.music.play(-1)
+
+volume_son = 0.4  # Valeur initiale du volume (entre 0 et 1)
+pygame.mixer.music.set_volume(volume_son)
+def regler_volume_son(nouveau_volume):
+    global volume_son
+    volume_son = max(0, min(1, nouveau_volume))  # Assurez-vous que le volume est entre 0 et 1
+    pygame.mixer.music.set_volume(volume_son)
+
+# Charger l'image du personnage
+personnage_image = pygame.image.load("D:\\Projet\\A\\personnage.png")
+taille_personnage = (100, 100)
+personnage_image = pygame.transform.scale(personnage_image, taille_personnage)
+
+personnage_rect = personnage_image.get_rect()
+
+# Définir la vitesse du personnage
+vitesse = 3
+
+# Obtenir les informations sur l'écran
+info_ecran = pygame.display.Info()
+largeur_ecran, hauteur_ecran = info_ecran.current_w, info_ecran.current_h
+
+# Définir la nouvelle taille de la fenêtre
+largeur, hauteur = largeur_ecran, hauteur_ecran
+taille_fenetre = (largeur, hauteur)
+
+# Initialisez les coordonnées du personnage au centre de la fenêtre
+personnage_rect.center = (largeur // 2, hauteur // 2)
+
+# Créer la fenêtre
+fenetre = pygame.display.set_mode(taille_fenetre)
+pygame.display.set_caption("Caca Boudin")
+
+# Classe pour les obstacles
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("D:\\Projet\\A\\ilhanchie.png")
+        self.image = pygame.transform.scale(self.image, (largeur_ecran // 30, hauteur_ecran // 22)) 
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0, largeur - self.rect.width)
+        self.rect.y = random.randint(0, hauteur - self.rect.height)
+        self.vitesse_x = random.randint(1, 5)
+        self.vitesse_y = random.randint(-2, 2)
+
+    def update(self):
+        self.rect.x += self.vitesse_x
+        self.rect.y += self.vitesse_y
+
+        # Réinitialise la position si l'obstacle sort de l'écran
+        if self.rect.left > largeur:
+            self.rect.right = 0
+            self.rect.y = random.randint(0, hauteur - self.rect.height)
+
+class Obstacle2(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("D:\\Projet\\A\\sex.png")
+        self.image = pygame.transform.scale(self.image, (largeur_ecran // 30, hauteur_ecran // 22))
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randint(0, largeur - self.rect.width)
+        self.rect.y = random.randint(0, hauteur - self.rect.height)
+        self.vitesse_x = random.randint(1, 5)
+        self.vitesse_y = random.randint(-2, 2)
+
+    def update(self):
+        self.rect.x += self.vitesse_x
+        self.rect.y += self.vitesse_y
+
+        # Réinitialise la position si l'obstacle sort de l'écran
+        if self.rect.left > largeur:
+            self.rect.right = 0
+            self.rect.y = random.randint(0, hauteur - self.rect.height)
+
+class Obstacle3(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("D:\\Projet\\A\\faille2.png")
+        self.image = pygame.transform.scale(self.image, (largeur_ecran // 100, hauteur_ecran // 75))
+        self.rect = self.image.get_rect()
+
+        # Choix aléatoire de l'emplacement initial à gauche ou à droite de l'écran
+        if random.choice([True, False]):
+            self.rect.x = 0 - self.rect.width  # À gauche de l'écran
+        else:
+            self.rect.x = largeur  # À droite de l'écran
+
+        self.rect.y = random.randint(0, hauteur - self.rect.height)
+        self.vitesse_x = 0  # Obstacle immobile
+        self.vitesse_y = 0  # Obstacle immobile
+
+    def update(self):
+        # Vous pouvez laisser cette partie inchangée si l'objet est immobile
+        pass
+
+# Groupe pour les obstacles
+obstacles = pygame.sprite.Group()
+for _ in range(7):  
+    obstacle = Obstacle()
+    obstacles.add(obstacle)
+
+obstacles2 = pygame.sprite.Group()
+for _ in range(7):
+    obstacle2 = Obstacle2()
+    obstacles2.add(obstacle2)
+
+obstacles3 = pygame.sprite.Group()
+obstacle3 = Obstacle3()
+obstacles3.add(obstacle3)
+
+def afficher_menu():
+    menu_font = pygame.font.Font(None, 36)
+    menu_options = ["Démarrer le jeu", "Quitter"]
+
+    menu_surface = pygame.Surface(((largeur // 3), (hauteur // 3)))
+    menu_surface.set_alpha(200)
+    menu_surface.fill((50, 50, 50))
+
+    menu_rect = menu_surface.get_rect(center=(largeur // 2, hauteur // 2))
+
+    fenetre.blit(menu_surface, menu_rect)
+
+    menu_options_rect = []
+
+    for i, option in enumerate(menu_options):
+        texte_option = menu_font.render(option, True, (255, 255, 255))
+        option_rect = texte_option.get_rect(center=(largeur // 2, hauteur // 2 + i * 40))
+
+        if option_rect.collidepoint(pygame.mouse.get_pos()):
+            texte_option = menu_font.render(option, True, (255, 0, 0))
+
+        fenetre.blit(texte_option, option_rect)
+        menu_options_rect.append(option_rect)
+
+    return menu_options_rect
+
+# Variable pour le message de collision
+message_collision = "Bloster s'est fait attraper le slip"
+
+# Font pour le message de collision
+font_collision = pygame.font.Font(None, 36)
+
+# Surface pour afficher le message de collision
+surface_collision = pygame.Surface(((largeur // 3), (hauteur // 3)))
+surface_collision.set_alpha(200)
+surface_collision.fill((50, 50, 50))
+rect_collision = surface_collision.get_rect(center=(largeur // 2, hauteur // 2))
+
+def afficher_fenetre_collision():
+    global message_collision
+    dialogue_font = pygame.font.Font(None, 36)
+    options_collision = ["Restart le Bloster",  "Quitter le jeu"]
+
+    dialogue_surface = pygame.Surface(((largeur // 3), (hauteur // 3)))
+    dialogue_surface.set_alpha(200)
+    dialogue_surface.fill((50, 50, 50))
+
+    dialogue_rect = dialogue_surface.get_rect(center=(largeur // 2, hauteur // 2))
+
+    fenetre.blit(dialogue_surface, dialogue_rect)
+
+    options_rect = []
+
+    for i, option in enumerate(options_collision):
+        texte_option = dialogue_font.render(option, True, (255, 255, 255))
+        option_rect = texte_option.get_rect(center=(largeur // 2, hauteur // 2 + i * 40))
+
+        if option_rect.collidepoint(pygame.mouse.get_pos()):
+            texte_option = dialogue_font.render(option, True, (255, 0, 0))
+
+        fenetre.blit(texte_option, option_rect)
+        options_rect.append(option_rect)
+
+    # Afficher le message de collision
+    texte_collision = font_collision.render(message_collision, True, (255, 255, 255))
+    rect_collision_texte = texte_collision.get_rect(center=(largeur // 2, hauteur // 2 - 40))
+    fenetre.blit(texte_collision, rect_collision_texte)
+
+    pygame.display.flip()
+
+    return options_rect
+
+# Variable pour le temps écoulé (en secondes)
+temps_ecoule = 0
+
+# Obtenir le temps actuel en millisecondes
+temps_actuel = pygame.time.get_ticks()
+
+def reinitialiser_jeu():
+
+    global temps_ecoule  
+    temps_ecoule = -1  
+    # Réinitialiser la position du personnage
+    personnage_rect.x = largeur // 2
+    personnage_rect.y = hauteur // 2
+
+    # Réinitialiser la position des obstacles
+    for obstacle in obstacles:
+        obstacle.rect.x = random.randint(0, largeur - obstacle.rect.width)
+        obstacle.rect.y = random.randint(0, hauteur - obstacle.rect.height)
+
+    for obstacle2 in obstacles2:
+        obstacle2.rect.x = random.randint(0, largeur - obstacle2.rect.width)
+        obstacle2.rect.y = random.randint(0, hauteur - obstacle2.rect.height)
+
+    for obstacle3 in obstacles3:
+        obstacle3.rect.x = random.randint(0, largeur - obstacle3.rect.width)
+        obstacle3.rect.y = random.randint(0, hauteur - obstacle3.rect.height)
+
+def afficher_menu_demarrage():
+    menu_font = pygame.font.Font(None, 36)
+    menu_options = ["Démarrer le jeu", "Quitter"]
+
+    menu_surface = pygame.Surface(((largeur // 3), (hauteur // 3)))
+    menu_surface.set_alpha(200)
+    menu_surface.fill((50, 50, 50))
+
+    menu_rect = menu_surface.get_rect(center=(largeur // 2, hauteur // 2))
+
+    fenetre.blit(menu_surface, menu_rect)
+
+    menu_options_rect = []
+
+    for i, option in enumerate(menu_options):
+        texte_option = menu_font.render(option, True, (255, 255, 255))
+        option_rect = texte_option.get_rect(center=(largeur // 2, hauteur // 2 + i * 40))
+
+        if option_rect.collidepoint(pygame.mouse.get_pos()):
+            texte_option = menu_font.render(option, True, (255, 0, 0))
+
+        fenetre.blit(texte_option, option_rect)
+        menu_options_rect.append(option_rect)
+
+    pygame.display.flip()
+
+    return menu_options_rect
+
+# Variable pour suivre l'état du menu de démarrage
+menu_demarrage_affiche = True
+
+# Définir le menu
+menu_font = pygame.font.Font(None, 36)
+menu_options = ["Paramètres ", "Quitter"]
+
+# Variable pour suivre l'état du menu
+menu_affiche = False
+
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Clic gauche de la souris
+            if menu_demarrage_affiche:
+                for i, option_rect in enumerate(menu_options_rect):
+                    if option_rect.collidepoint(event.pos):
+                        if i == 0:  # L'index 0 correspond à l'option "Démarrer le jeu"
+                            menu_demarrage_affiche = False
+                        elif i == 1:  # L'index 1 correspond à l'option "Quitter"
+                            pygame.quit()
+                            sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                menu_affiche = not menu_affiche  # Inverse l'état du menu   
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Clic gauche de la souris
+                if menu_affiche:
+                    # Vérifier si le clic est sur l'option "Quitter"
+                    option_rect_quitter = menu_options_rect[1]  # L'index 1 correspond à l'option "Quitter"
+                    if option_rect_quitter.collidepoint(event.pos):
+                        pygame.quit()
+                        sys.exit()
+
+    if menu_demarrage_affiche:
+        menu_options_rect = afficher_menu_demarrage()
+    else:
+        if not menu_affiche:
+            # Recalculer la taille du personnage en fonction de la fenêtre
+            nouvelle_taille_personnage = (largeur_ecran // 20, hauteur_ecran // 12)
+            personnage_image = pygame.transform.scale(personnage_image, nouvelle_taille_personnage)
+            personnage_rect.size = nouvelle_taille_personnage
+
+            # Gestion des touches pour déplacer le personnage
+            touches = pygame.key.get_pressed()
+            if touches[pygame.K_q] and personnage_rect.left > 0:
+                personnage_rect.x -= vitesse
+            if touches[pygame.K_d] and personnage_rect.right < largeur:
+                personnage_rect.x += vitesse
+            if touches[pygame.K_z] and personnage_rect.top > 0:
+                personnage_rect.y -= vitesse
+            if touches[pygame.K_s] and personnage_rect.bottom < hauteur:
+                personnage_rect.y += vitesse
+
+            # Vérifier les collisions avec les obstacles
+            for obstacle in obstacles:
+                if personnage_rect.colliderect(obstacle.rect):
+                    options_rect_collision = afficher_fenetre_collision()
+                    message_collision = "Bloster est mort !!"
+
+                    # Attendre que l'utilisateur fasse un choix
+                    choix_fait = False
+                    while not choix_fait:
+                        for event_collision in pygame.event.get():
+                            if event_collision.type == pygame.MOUSEBUTTONDOWN and event_collision.button == 1:
+                                # Vérifier quel choix a été fait
+                                for i, option_rect in enumerate(options_rect_collision):
+                                    if option_rect.collidepoint(event_collision.pos):
+                                        if i == 0:
+                                            print("Restart le Bloster")
+                                            reinitialiser_jeu()
+                                            choix_fait = True
+                                        elif i == 1:
+                                            pygame.quit()
+                                            sys.exit()
+
+                                        choix_fait = True
+
+            # Vérifier les collisions avec les obstacles du deuxième groupe
+            for obstacle2 in obstacles2:
+                if personnage_rect.colliderect(obstacle2.rect):
+                    options_rect_collision = afficher_fenetre_collision()
+                    message_collision = "Bloster s'est fait goder le cul !!"
+
+                    # Attendre que l'utilisateur fasse un choix
+                    choix_fait = False
+                    while not choix_fait:
+                        for event_collision in pygame.event.get():
+                            if event_collision.type == pygame.MOUSEBUTTONDOWN and event_collision.button == 1:
+                                # Vérifier quel choix a été fait
+                                for i, option_rect in enumerate(options_rect_collision):
+                                    if option_rect.collidepoint(event_collision.pos):
+                                        if i == 0:
+                                            print("Restart le Bloster")
+                                            reinitialiser_jeu()
+                                            choix_fait = True
+                                        elif i == 1:
+                                            pygame.quit()
+                                            sys.exit()
+
+                                        choix_fait = True
+            
+            # Vérifier les collisions avec les obstacles du troixième groupe
+            for obstacle3 in obstacles3:
+                if personnage_rect.colliderect(obstacle2.rect):
+                    options_rect_collision = afficher_fenetre_collision()
+                    message_collision = "Bloster s'est fait mitrailler la rondelle !!"
+
+                    # Attendre que l'utilisateur fasse un choix
+                    choix_fait = False
+                    while not choix_fait:
+                        for event_collision in pygame.event.get():
+                            if event_collision.type == pygame.MOUSEBUTTONDOWN and event_collision.button == 1:
+                                # Vérifier quel choix a été fait
+                                for i, option_rect in enumerate(options_rect_collision):
+                                    if option_rect.collidepoint(event_collision.pos):
+                                        if i == 0:
+                                            print("Restart le Bloster")
+                                            reinitialiser_jeu()
+                                            choix_fait = True
+                                        elif i == 1:
+                                            pygame.quit()
+                                            sys.exit()
+
+                                        choix_fait = True
+
+        # Mise à jour de l'affichage
+        fenetre.fill((0, 0, 0))  # Remplit l'écran avec une couleur de fond (ici, noir)
+        fenetre.blit(personnage_image, personnage_rect)
+
+        # Calculer le temps écoulé depuis la dernière mise à jour
+        temps_passe = pygame.time.get_ticks() - temps_actuel
+        temps_actuel += temps_passe
+        # Convertir le temps en secondes
+        temps_ecoule += temps_passe / 1000
+
+        # Afficher le temps en jeu
+        font_temps = pygame.font.Font(None, 36)
+        texte_temps = font_temps.render(f"Temps : {int(temps_ecoule)} s", True, (255, 255, 255))
+        rect_temps = texte_temps.get_rect(topleft=(10, 10))
+        fenetre.blit(texte_temps, rect_temps)
+
+        if menu_affiche:
+            menu_surface = pygame.Surface(((largeur // 3), (hauteur // 3)))
+            menu_surface.set_alpha(200)  # Réglage de la transparence du fond du menu
+            menu_surface.fill((50, 50, 50))  # Remplit le fond du menu avec une couleur (ici, gris foncé)
+
+            menu_rect = menu_surface.get_rect(center=(largeur // 2, hauteur // 2))
+
+            fenetre.blit(menu_surface, menu_rect)
+
+            # Liste pour stocker les rectangles des options du menu
+            menu_options_rect = []
+
+            for i, option in enumerate(menu_options):
+                texte_option = menu_font.render(option, True, (255, 255, 255))
+
+                # Effet de survol : changement de couleur
+                option_rect = texte_option.get_rect(center=(largeur // 2, hauteur // 2 + i * 40))
+                if option_rect.collidepoint(pygame.mouse.get_pos()):
+                    texte_option = menu_font.render(option, True, (255, 0, 0))  # Texte en rouge lors du survol
+
+                fenetre.blit(texte_option, option_rect)
+
+                # Ajouter le rectangle de l'option à la liste
+                menu_options_rect.append(option_rect)
+
+        # Mise à jour et dessin des obstacles du premier groupe
+        obstacles.update()
+        obstacles.draw(fenetre)
+
+        # Mise à jour et dessin des obstacles du deuxième groupe
+        obstacles2.update()
+        obstacles2.draw(fenetre)
+
+
+    pygame.display.flip()
